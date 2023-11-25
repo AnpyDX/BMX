@@ -5,7 +5,7 @@
 This repo is a **C++** implementation of **BMX** praser. And, welcome everybody to do works on binding **BMX** to other languages.
 
 ## Possible Usage
-**BMX** was originally created to allow me writting vertex shader and fragment shader in one `.shader` file. Here is an *shader* in `BMX` example.
+**BMX** was originally created to allow me writting vertex shader and fragment shader in one `.shader` file. Here is an example of using **BMX** for shader usage.
 
 - basic_shader.shader
 
@@ -51,10 +51,10 @@ int main() {
 ```
 
 ## Document
-Read [Document]() for more details and guides.
+Read [Document](https://github.com/AnpyDX/BMX/blob/main/document.md) for more details and guides.
 
 ## Thanks
-**Ascii-icon** is created in [network-science](http://www.network-science.de/ascii/).
+**Ascii-icon** of **BMX** was created in [network-science](http://www.network-science.de/ascii/).
 
 ## License
 Licensed under the MIT license, see `LICENSE` for details.
