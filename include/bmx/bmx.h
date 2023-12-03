@@ -32,7 +32,7 @@ namespace BMX {
     /** @section Types of BMX **/
 
     /**
-    * @brief exception type that BMX-Parser throws while parsing.
+    * @brief common exception type of BMX.
     */
     class Exception : public std::exception {
     public:
@@ -47,12 +47,30 @@ namespace BMX {
     };
 
     /**
+    * @brief syntax exception type that BMX-Parser throws while parsing.
+    */
+    class SyntaxException : public std::exception {
+    public:
+        SyntaxException(const std::string& info);
+
+        virtual ~SyntaxException();
+
+        virtual const char* what() const;
+
+    private:
+        std::string m_exception_info;
+    };
+
+    /**
     * @brief BMX data type, which stores the data read from bmx file
     */
     class Data {
     public:
-        std::map<std::string, std::string> blocks;
-        std::map<std::string, std::string> attributes;
+        /** BMX Text Blocks  */
+        std::map<std::string, std::string> texts;
+
+        /** BMX Attribute Blocks */
+        std::map<std::string, std::map<std::string, std::string>> attributes;
     };
 
     
