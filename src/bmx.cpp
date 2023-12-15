@@ -74,12 +74,6 @@ namespace {
                     if (data.texts.find(ctx_block_name) != data.texts.end()) {
                         syntaxMessage(L, L.size() - 1, "Block \"" + ctx_block_name + "\" is existed!");
                     }
-
-                    // TODO 
-                    //  1. Block name 的重定义问题
-                    //  2. Attribute Block 中 key 的重定义问题
-                    //  3. Line Number
-                    //  4. 分离 Common 和 Syntax Exception; Syntax Exception 加入行号和位置
                 }
 
                 /* if block is BMX_COMMENT_BLOCK type, just skip current line */
@@ -232,24 +226,12 @@ namespace {
         }
 
         /**
-        * @brief syntax error message printer
+        * @brief syntax error message
         */
         void syntaxMessage(const std::string& line, 
                             int warn_pointer_index,
                             const std::string& msg) {
-
-            std::string error_line_hint = line + "\n";
-            for (int i = 0; i < line.size(); i++) {
-                if (i == warn_pointer_index) {
-                    error_line_hint.append("^");
-                    break;
-                }
-                error_line_hint.append("~");
-            }
-
-            error_line_hint += "\n";
-
-            throw BMX::SyntaxException("syntax error: " + msg + "\n" + error_line_hint);
+            throw BMX::SyntaxException(msg, line, warn_pointer_index); // FIXME
         }
 
     private:
@@ -258,56 +240,63 @@ namespace {
 }
 
 /* @section BMX Types Impl */
-BMX::Exception::Exception(const std::string& info) {
-    this->m_exception_info = info;
+const char* BMX::BaseException::what() const {
+    return m_exception_info.c_str();
 }
 
-BMX::Exception::~Exception() {}
+BMX::Exception::Exception(const std::string& info) {
+    m_exception_info = info;
+}
 
 const char* BMX::Exception::what() const {
-    return this->m_exception_info.c_str();
+    return m_exception_info.c_str();
 }
 
-BMX::SyntaxException::SyntaxException(const std::string& info) {
-    this->m_exception_info = info;
+BMX::SyntaxException::SyntaxException(const std::string& msg, const std::string& line, int error_pointer) {
+    m_exception_info = msg;
+    m_error_line = line;
+    m_error_pointer = error_pointer;
 }
-
-BMX::SyntaxException::~SyntaxException() {}
 
 const char* BMX::SyntaxException::what() const {
-    return this->m_exception_info.c_str();
+    return m_exception_info.c_str();
+}
+
+void BMX::SyntaxException::get_detail(std::string& error_line, int& error_pointer) const {
+    error_line = m_error_line;
+    error_pointer = m_error_pointer;
 }
 
 /* @section BMX Functions Impl */
 BMX::Data BMX::load(const std::string& str) {
     if (str.empty()) {
-        throw BMX::Exception("fatal error: Failed to load BMX Data from an empty string!");
+        throw BMX::Exception("Failed to load BMX Data from an empty string!");
     }
 
     std::vector<std::string> lines;
     std::string current_line = "";
 
-    for (auto i = str.begin(); i != str.end(); i++) {
-        if (*i == '\n') {
+    for (int i = 0; i < str.size(); i++) {
+        if (str[i] == '\n') {
             lines.push_back(current_line);
             current_line = "";
             continue;
         }
         
-        current_line.append(std::to_string(*i));
+        current_line.append(std::string(1, str[i]));
     }
 
     if (!current_line.empty()) {
         lines.push_back(current_line);
     }
 
-    int count = lines.size();
+    int index = 0;
     BMXParser _Parser {
-        [&lines, &count](std::string& L) -> bool {
-            if (count == 0) { L = std::string(""); return false; }
+        [&lines, &index](std::string& L) -> bool {
+            if (index == lines.size()) { L = std::string(""); return false; }
 
-            L = lines[count - 1];
-            count--;
+            L = lines[index];
+            index++;
             return true;
         }
     };

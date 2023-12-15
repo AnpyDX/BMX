@@ -30,35 +30,55 @@
 namespace BMX {
     
     /** @section Types of BMX **/
-
     /**
-    * @brief common exception type of BMX.
+    * @brief base exception type of all BMX exception.
     */
-    class Exception : public std::exception {
+    class BaseException : public std::exception {
     public:
-        Exception(const std::string& info);
-
-        virtual ~Exception();
+        BaseException() = default;
+        ~BaseException() = default;
 
         virtual const char* what() const;
 
-    private:
+    protected:
         std::string m_exception_info;
+    };
+
+
+    /**
+    * @brief common exception type of BMX.
+    * @note this exception includes following situations
+    *       1. Failed to open file while calling func < BMX::loads >
+    *       
+    */
+    class Exception : private BaseException {
+    public:
+        Exception() = delete;
+        Exception(const std::string& info);
+        ~Exception() = default;
+
+        virtual const char* what() const;
     };
 
     /**
     * @brief syntax exception type that BMX-Parser throws while parsing.
     */
-    class SyntaxException : public std::exception {
+    class SyntaxException : private BaseException {
     public:
-        SyntaxException(const std::string& info);
-
-        virtual ~SyntaxException();
+        SyntaxException() = default;
+        SyntaxException(const std::string& msg, const std::string& line, int error_pointer);
+        ~SyntaxException() = default;
 
         virtual const char* what() const;
 
+        /**
+        * @brief get error line's detail
+        */
+        virtual void get_detail(std::string& error_line, int& error_pointer) const;
+
     private:
-        std::string m_exception_info;
+        std::string m_error_line;
+        int m_error_pointer;
     };
 
     /**
