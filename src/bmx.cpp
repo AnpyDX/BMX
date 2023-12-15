@@ -22,6 +22,7 @@
 
 #include "bmx/bmx.h"
 #include <vector>
+#include <array>
 #include <functional>
 
 
@@ -32,6 +33,7 @@ namespace {
         char BLOCK_END_SIGN = ']';
         char ATTR_BEGIN_SIGN = '@';
         char ATTR_END_SIGN = ':';
+        char ATTR_ED_SIGN = '!';
         char COMMENT_BEGIN_SIGN = '#';
     };
 
@@ -69,10 +71,15 @@ namespace {
                 /* if read BLOCK_BEGIN_SIGN, considered beginning a new block */
                 if (L[0] == BMX_SMAP.BLOCK_BEGIN_SIGN) {
                     ctx_block_name = blockNameReader(L, N, ctx_block_type);
-                    if (data.texts.find(ctx_block_name) == data.texts.end());
-                    // TODO 重定义问题
+                    if (data.texts.find(ctx_block_name) != data.texts.end()) {
+                        syntaxMessage(L, L.size() - 1, "Block \"" + ctx_block_name + "\" is existed!");
+                    }
+
+                    // TODO 
                     //  1. Block name 的重定义问题
                     //  2. Attribute Block 中 key 的重定义问题
+                    //  3. Line Number
+                    //  4. 分离 Common 和 Syntax Exception; Syntax Exception 加入行号和位置
                 }
 
                 /* if block is BMX_COMMENT_BLOCK type, just skip current line */
@@ -87,8 +94,14 @@ namespace {
                 
                 /* if block is BMX_ATTRIBUTE_BLOCK type, parse line line and append */
                 else if (ctx_block_type == BMX_ATTRIBUTE_BLOCK) {
+                    // if current line does start with ATTR_BEGIN_SIGN, then parse
                     if (L[0] == BMX_SMAP.ATTR_BEGIN_SIGN) {
-                        data.attributes[ctx_block_name] = attributeReader(L, N);
+                        auto attr = attributeReader(L, N);
+                        if (data.attributes[ctx_block_name].find(attr[0]) != data.attributes[ctx_block_name].end()) {
+                            syntaxMessage(L, L.size() - 1, "Attribute \"" + attr[0] + "\" is existed!");
+                        }
+
+                        data.attributes[ctx_block_name][attr[0]] = attr[1];
                     }
 
                     // if current line doesn't start with ATTR_BEGIN_SIGN, just ignore
@@ -110,14 +123,16 @@ namespace {
         std::string getCleanString(const std::string& str) {
             if (str.empty()) return str;
 
-            int begin_index = 0;
-            int end_index = 0;
+            int begin_index = -1;
+            int end_index = -1;
             for (int i = 0; i < str.size(); i++) {
                 if (str[i] != ' ') {
                     begin_index = i;
                     break;
                 }
             }
+            if (begin_index == -1) { return ""; }
+
             for (int i = str.size() - 1; i != -1; i--) {
                 if (str[i] != ' ') {
                     end_index = i;
@@ -152,7 +167,11 @@ namespace {
                 }
             }
 
-            std::string block_name = getCleanString(line.substr(1, end_index - 2));
+            std::string block_name = getCleanString(line.substr(1, end_index - 1));
+
+            if (block_name.empty()) {
+                syntaxMessage(line, line.size() - 1, "Block's name cannot be empty!");
+            }
 
             switch (block_name[0]) {
             case BMX_SMAP.ATTR_BEGIN_SIGN:
@@ -171,9 +190,45 @@ namespace {
 
         /**
         * @brief parse attribute line
+        * @return [ attr_key, attr_value ]
         */
-        std::map<std::string, std::string> attributeReader(const std::string& line, int line_number) {
+        std::array<std::string, 2> attributeReader(const std::string& line, int line_number) {
+            // if attr is an empty declaration(ED), just cut its key
+            if (line[1] == BMX_SMAP.ATTR_ED_SIGN) {
+                std::string attr_key = getCleanString(line.substr(2));
+                if (attr_key.empty()) {
+                    syntaxMessage(line, line.size() - 1, "Attribute key is empty!");
+                }
 
+                return { attr_key, std::string("") };
+            }
+
+            // if not DE, get its key
+            int key_end_index = -1;
+            for (int i = 1; i < line.size(); i++) {
+                if (line[i] == BMX_SMAP.ATTR_END_SIGN) {
+                    key_end_index = i;
+                    break;
+                }
+            }
+
+            if (key_end_index == -1) {
+                syntaxMessage(line, line.size() - 1, "Failed to find \":\" after attribute's key!");
+            }
+
+            std::string attr_key = getCleanString(line.substr(1, key_end_index - 1));
+            if (attr_key.empty()) {
+                syntaxMessage(line, line.size() - 1, "Attribute's key is empty!");
+            }
+
+            // get attr value
+            if (key_end_index == line.size() - 1) {
+                syntaxMessage(line, line.size() - 1, "Attribute's value is empty!");
+            }
+
+            std::string attr_value = getCleanString(line.substr(key_end_index + 1));
+
+            return { attr_key, attr_value };
         }
 
         /**
@@ -194,11 +249,11 @@ namespace {
 
             error_line_hint += "\n";
 
-            throw BMX::SyntaxException("syntax error: " + msg + error_line_hint);
+            throw BMX::SyntaxException("syntax error: " + msg + "\n" + error_line_hint);
         }
 
     private:
-        const std::function<bool(std::string &line)>& m_geter;
+        const std::function<bool(std::string &line)> m_geter;
     };
 }
 
@@ -261,9 +316,19 @@ BMX::Data BMX::load(const std::string& str) {
 }
 
 BMX::Data BMX::loads(std::fstream& file) {
-    
+    if (!file.is_open()) {
+        throw BMX::Exception("Failed to open BMX file!");
+    }
+
+    BMXParser _Praser {
+        [&file](std::string& L) -> bool {
+            return getline(file, L) ? true : false;
+        }
+    };
+
+    return _Praser.parse();
 }
 
 std::string BMX::dumps(const BMX::Data& data) {
-
+    return "";
 }
