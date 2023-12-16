@@ -13,7 +13,7 @@
 *
 * Block Mixture Language Binding for C++
 * -> Implementation of c++ binding for BMX
-* - Project: https://github.com/AnpyDX/bmx-lib
+* - Project: https://github.com/AnpyDX/BMX
 * - Version: 2.0 (for C++)
 *
 * @copyright Copyright (c) 2022-2023 AnpyD
@@ -72,7 +72,7 @@ namespace {
                 if (L[0] == BMX_SMAP.BLOCK_BEGIN_SIGN) {
                     ctx_block_name = blockNameReader(L, N, ctx_block_type);
                     if (data.texts.find(ctx_block_name) != data.texts.end()) {
-                        syntaxMessage(L, L.size() - 1, "Block \"" + ctx_block_name + "\" is existed!");
+                        syntaxMessage(L, N, L.size() - 1, "Block \"" + ctx_block_name + "\" is existed!");
                     }
                 }
 
@@ -92,7 +92,7 @@ namespace {
                     if (L[0] == BMX_SMAP.ATTR_BEGIN_SIGN) {
                         auto attr = attributeReader(L, N);
                         if (data.attributes[ctx_block_name].find(attr[0]) != data.attributes[ctx_block_name].end()) {
-                            syntaxMessage(L, L.size() - 1, "Attribute \"" + attr[0] + "\" is existed!");
+                            syntaxMessage(L, N, L.size() - 1, "Attribute \"" + attr[0] + "\" is existed!");
                         }
 
                         data.attributes[ctx_block_name][attr[0]] = attr[1];
@@ -151,20 +151,20 @@ namespace {
             }
 
             if (end_index == -1) {
-                syntaxMessage(line, line.size() - 1, "Block decleration isn't closed!");
+                syntaxMessage(line, line_number, line.size() - 1, "Block decleration isn't closed!");
             }
 
             for (int i = 1; i < end_index; i++) {
                 // FIXME cannot detect unexpected character after end_index
                 if (line[i] == BMX_SMAP.BLOCK_BEGIN_SIGN || line[i] == BMX_SMAP.BLOCK_END_SIGN) {
-                    syntaxMessage(line, i, "Unexpected bracket in block decleration!");
+                    syntaxMessage(line, line_number, i, "Unexpected bracket in block decleration!");
                 }
             }
 
             std::string block_name = getCleanString(line.substr(1, end_index - 1));
 
             if (block_name.empty()) {
-                syntaxMessage(line, line.size() - 1, "Block's name cannot be empty!");
+                syntaxMessage(line, line_number, line.size() - 1, "Block's name cannot be empty!");
             }
 
             switch (block_name[0]) {
@@ -191,7 +191,7 @@ namespace {
             if (line[1] == BMX_SMAP.ATTR_ED_SIGN) {
                 std::string attr_key = getCleanString(line.substr(2));
                 if (attr_key.empty()) {
-                    syntaxMessage(line, line.size() - 1, "Attribute key is empty!");
+                    syntaxMessage(line, line_number, line.size() - 1, "Attribute key is empty!");
                 }
 
                 return { attr_key, std::string("") };
@@ -207,17 +207,17 @@ namespace {
             }
 
             if (key_end_index == -1) {
-                syntaxMessage(line, line.size() - 1, "Failed to find \":\" after attribute's key!");
+                syntaxMessage(line, line_number, line.size() - 1, "Failed to find \":\" after attribute's key!");
             }
 
             std::string attr_key = getCleanString(line.substr(1, key_end_index - 1));
             if (attr_key.empty()) {
-                syntaxMessage(line, line.size() - 1, "Attribute's key is empty!");
+                syntaxMessage(line, line_number, line.size() - 1, "Attribute's key is empty!");
             }
 
             // get attr value
             if (key_end_index == line.size() - 1) {
-                syntaxMessage(line, line.size() - 1, "Attribute's value is empty!");
+                syntaxMessage(line, line_number, line.size() - 1, "Attribute's value is empty!");
             }
 
             std::string attr_value = getCleanString(line.substr(key_end_index + 1));
@@ -228,10 +228,11 @@ namespace {
         /**
         * @brief syntax error message
         */
-        void syntaxMessage(const std::string& line, 
+        void syntaxMessage(const std::string& line,
+                            int line_number,
                             int warn_pointer_index,
                             const std::string& msg) {
-            throw BMX::SyntaxException(msg, line, warn_pointer_index); // FIXME
+            throw BMX::SyntaxException(msg, line, line_number, warn_pointer_index); // FIXME
         }
 
     private:
@@ -252,9 +253,10 @@ const char* BMX::Exception::what() const {
     return m_exception_info.c_str();
 }
 
-BMX::SyntaxException::SyntaxException(const std::string& msg, const std::string& line, int error_pointer) {
+BMX::SyntaxException::SyntaxException(const std::string& msg, const std::string& line, int line_number, int error_pointer) {
     m_exception_info = msg;
     m_error_line = line;
+    m_line_number = line_number;
     m_error_pointer = error_pointer;
 }
 
@@ -262,8 +264,9 @@ const char* BMX::SyntaxException::what() const {
     return m_exception_info.c_str();
 }
 
-void BMX::SyntaxException::get_detail(std::string& error_line, int& error_pointer) const {
+void BMX::SyntaxException::get_detail(std::string& error_line, int& line_number, int& error_pointer) const {
     error_line = m_error_line;
+    line_number = m_line_number;
     error_pointer = m_error_pointer;
 }
 

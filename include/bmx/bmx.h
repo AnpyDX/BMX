@@ -13,7 +13,7 @@
 *
 * Block Mixture Language Binding for C++
 * -> Header of c++ binding for BMX
-* - Project: https://github.com/AnpyDX/bmx-lib
+* - Project: https://github.com/AnpyDX/BMX
 * - Version: 2.0 (for C++)
 *
 * @copyright Copyright (c) 2022-2023 AnpyD
@@ -65,8 +65,8 @@ namespace BMX {
     */
     class SyntaxException : private BaseException {
     public:
-        SyntaxException() = default;
-        SyntaxException(const std::string& msg, const std::string& line, int error_pointer);
+        SyntaxException() = delete;
+        SyntaxException(const std::string& msg, const std::string& line, int line_number, int error_pointer);
         ~SyntaxException() = default;
 
         virtual const char* what() const;
@@ -74,10 +74,11 @@ namespace BMX {
         /**
         * @brief get error line's detail
         */
-        virtual void get_detail(std::string& error_line, int& error_pointer) const;
+        virtual void get_detail(std::string& error_line, int& line_number, int& error_pointer) const;
 
     private:
         std::string m_error_line;
+        int m_line_number;
         int m_error_pointer;
     };
 

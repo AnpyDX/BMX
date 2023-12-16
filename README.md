@@ -51,7 +51,7 @@ int main() {
 Read [Document](https://github.com/AnpyDX/BMX/blob/main/document.md) for more details and guides.
 
 ## Thanks
-**Ascii-icon** of **BMX** was created in [network-science](http://www.network-science.de/ascii/).
+**Ascii-icon** of **BMX** was created by [network-science](http://www.network-science.de/ascii/).
 
 ## License
 Licensed under the MIT license, see `LICENSE` for details.
