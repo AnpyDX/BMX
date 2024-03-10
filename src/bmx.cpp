@@ -322,5 +322,35 @@ BMX::Data BMX::loads(std::fstream& file) {
 }
 
 std::string BMX::dumps(const BMX::Data& data) {
-    return "";
+    /**
+    * BMX data -> text generate order
+    *   1. all attribute blocks
+    *   2. all text blocks
+    */
+
+    std::string res_bmx_string = "\n";
+
+    for (auto nit = data.attributes.begin(); nit != data.attributes.end(); nit++) {
+        if (nit->first != "__global__") {
+            res_bmx_string.append("[ @" + nit->first + " ]\n");
+        }
+        
+        for (auto vit = nit->second.begin(); vit != nit->second.end(); vit++) {
+            if (vit->second.empty()) {
+                res_bmx_string.append("@!" + vit->first + "\n");
+            }
+            else {
+                res_bmx_string.append("@" + vit->first + ": " + vit->second + "\n");
+            }
+        }
+
+        res_bmx_string.append("\n");
+    }
+
+    for (auto nit = data.texts.begin(); nit != data.texts.end(); nit++) {
+        res_bmx_string.append("[ " + nit->first + " ]\n");
+        res_bmx_string.append(nit->second + "\n");
+    }
+
+    return res_bmx_string;
 }
