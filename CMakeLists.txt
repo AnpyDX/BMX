@@ -9,6 +9,6 @@ add_library(
 )
 
 target_include_directories(
-    "bmx" PRIVATE
-    include/bmx
+    "bmx" PUBLIC
+    include
 )
