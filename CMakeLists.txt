@@ -10,5 +10,5 @@ add_library(
 
 target_include_directories(
     "bmx" PUBLIC
-    include
+    include/
 )
