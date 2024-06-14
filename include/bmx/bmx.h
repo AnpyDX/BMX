@@ -38,7 +38,7 @@ namespace BMX {
         BaseException() = default;
         ~BaseException() = default;
 
-        virtual const char* what() const;
+        virtual const char* what() const noexcept;
 
     protected:
         std::string m_exception_info;
@@ -57,7 +57,7 @@ namespace BMX {
         Exception(const std::string& info);
         ~Exception() = default;
 
-        virtual const char* what() const;
+        virtual const char* what() const noexcept;
     };
 
     /**
@@ -69,7 +69,7 @@ namespace BMX {
         SyntaxException(const std::string& msg, const std::string& line, int line_number, int error_pointer);
         ~SyntaxException() = default;
 
-        virtual const char* what() const;
+        virtual const char* what() const noexcept;
 
         /**
         * @brief get error line's detail

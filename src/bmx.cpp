@@ -241,7 +241,7 @@ namespace {
 }
 
 /* @section BMX Types Impl */
-const char* BMX::BaseException::what() const {
+const char* BMX::BaseException::what() const noexcept {
     return m_exception_info.c_str();
 }
 
@@ -249,7 +249,7 @@ BMX::Exception::Exception(const std::string& info) {
     m_exception_info = info;
 }
 
-const char* BMX::Exception::what() const {
+const char* BMX::Exception::what() const noexcept {
     return m_exception_info.c_str();
 }
 
@@ -260,7 +260,7 @@ BMX::SyntaxException::SyntaxException(const std::string& msg, const std::string&
     m_error_pointer = error_pointer;
 }
 
-const char* BMX::SyntaxException::what() const {
+const char* BMX::SyntaxException::what() const noexcept {
     return m_exception_info.c_str();
 }
 
