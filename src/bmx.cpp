@@ -72,7 +72,7 @@ namespace {
                 if (L[0] == BMX_SMAP.BLOCK_BEGIN_SIGN) {
                     ctx_block_name = blockNameReader(L, N, ctx_block_type);
                     if (data.texts.find(ctx_block_name) != data.texts.end()) {
-                        syntaxMessage(L, N, L.size() - 1, "Block \"" + ctx_block_name + "\" is existed!");
+                        syntaxMessage(L, N, static_cast<int>(L.size()) - 1, "Block \"" + ctx_block_name + "\" is existed!");
                     }
                 }
 
@@ -92,7 +92,7 @@ namespace {
                     if (L[0] == BMX_SMAP.ATTR_BEGIN_SIGN) {
                         auto attr = attributeReader(L, N);
                         if (data.attributes[ctx_block_name].find(attr[0]) != data.attributes[ctx_block_name].end()) {
-                            syntaxMessage(L, N, L.size() - 1, "Attribute \"" + attr[0] + "\" is existed!");
+                            syntaxMessage(L, N, static_cast<int>(L.size()) - 1, "Attribute \"" + attr[0] + "\" is existed!");
                         }
 
                         data.attributes[ctx_block_name][attr[0]] = attr[1];
@@ -127,7 +127,7 @@ namespace {
             }
             if (begin_index == -1) { return ""; }
 
-            for (int i = str.size() - 1; i != -1; i--) {
+            for (int i = static_cast<int>(str.size()) - 1; i != -1; i--) {
                 if (str[i] != ' ') {
                     end_index = i;
                     break;
@@ -143,7 +143,7 @@ namespace {
         std::string blockNameReader(const std::string& line, int line_number, BMX_BLOCK_TYPE& type) {
             
             int end_index = -1; // the index of BLOCK_END_SIGN
-            for (int i = line.size() - 1; i > -1; i--) {
+            for (int i = static_cast<int>(line.size()) - 1; i > -1; i--) {
                 if (line[i] == BMX_SMAP.BLOCK_END_SIGN) {
                     end_index = i;
                     break;
@@ -151,7 +151,7 @@ namespace {
             }
 
             if (end_index == -1) {
-                syntaxMessage(line, line_number, line.size() - 1, "Block decleration isn't closed!");
+                syntaxMessage(line, line_number, static_cast<int>(line.size()) - 1, "Block decleration isn't closed!");
             }
 
             for (int i = 1; i < end_index; i++) {
@@ -164,7 +164,7 @@ namespace {
             std::string block_name = getCleanString(line.substr(1, end_index - 1));
 
             if (block_name.empty()) {
-                syntaxMessage(line, line_number, line.size() - 1, "Block's name cannot be empty!");
+                syntaxMessage(line, line_number, static_cast<int>(line.size()) - 1, "Block's name cannot be empty!");
             }
 
             switch (block_name[0]) {
@@ -191,7 +191,7 @@ namespace {
             if (line[1] == BMX_SMAP.ATTR_ED_SIGN) {
                 std::string attr_key = getCleanString(line.substr(2));
                 if (attr_key.empty()) {
-                    syntaxMessage(line, line_number, line.size() - 1, "Attribute key is empty!");
+                    syntaxMessage(line, line_number, static_cast<int>(line.size()) - 1, "Attribute key is empty!");
                 }
 
                 return { attr_key, std::string("") };
@@ -199,7 +199,7 @@ namespace {
 
             // if not DE, get its key
             int key_end_index = -1;
-            for (int i = 1; i < line.size(); i++) {
+            for (int i = 1; i < static_cast<int>(line.size()); i++) {
                 if (line[i] == BMX_SMAP.ATTR_END_SIGN) {
                     key_end_index = i;
                     break;
@@ -207,17 +207,17 @@ namespace {
             }
 
             if (key_end_index == -1) {
-                syntaxMessage(line, line_number, line.size() - 1, "Failed to find \":\" after attribute's key!");
+                syntaxMessage(line, line_number, static_cast<int>(line.size()) - 1, "Failed to find \":\" after attribute's key!");
             }
 
             std::string attr_key = getCleanString(line.substr(1, key_end_index - 1));
             if (attr_key.empty()) {
-                syntaxMessage(line, line_number, line.size() - 1, "Attribute's key is empty!");
+                syntaxMessage(line, line_number, static_cast<int>(line.size()) - 1, "Attribute's key is empty!");
             }
 
             // get attr value
-            if (key_end_index == line.size() - 1) {
-                syntaxMessage(line, line_number, line.size() - 1, "Attribute's value is empty!");
+            if (key_end_index == static_cast<int>(line.size()) - 1) {
+                syntaxMessage(line, line_number, static_cast<int>(line.size()) - 1, "Attribute's value is empty!");
             }
 
             std::string attr_value = getCleanString(line.substr(key_end_index + 1));
